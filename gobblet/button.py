@@ -6,7 +6,7 @@ class Button:
 
     selected_mode = 0
     selected_difficulty = 0
-    
+    selected_difficulty_two = 0
     def draw_button(win, x, y, width, height, text, button_color, border_color):
         rect = pygame.Rect(x, y, width, height)
         pygame.draw.rect(win, button_color, rect,

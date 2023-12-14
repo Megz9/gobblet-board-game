@@ -1,4 +1,5 @@
 import pygame
+from gobblet.button import Button
 from gobblet.piece import Piece
 
 from gobblet.tile import Tile
@@ -7,6 +8,7 @@ from .constants import *
 
 class Board:
     def __init__(self, win):
+        win.fill(BACKGROUND)
         self.board = [[0] * COLS for _ in range(ROWS)]
         self.left_stack_panel = [Tile(
             LEFT_PANE_START, MARGIN + (SQUARE_SIZE/2) + (SQUARE_SIZE * i)) for i in range(3)]
@@ -18,7 +20,7 @@ class Board:
         # self.red_kings = self.white_kings = 0
 
         self.draw_stack_panels(win)
-        self.draw_squares(win)
+        self.draw_initial_board(win)
 
         for i in range(3):
             for j in range(4):
@@ -30,8 +32,10 @@ class Board:
                 win, self.left_stack_panel[i].pieces_stack[-1], self.left_stack_panel[i])
             self.draw_piece(
                 win, self.right_stack_panel[i].pieces_stack[-1], self.right_stack_panel[i])
+        Button.draw_hover_button(win, RIGHT_PANE_START - MARGIN, MARGIN, BUTTON_HEIGHT, BUTTON_HEIGHT,
+                             "||", BEIGE, HOVER_COLOR)
 
-    def draw_squares(self, win):
+    def draw_initial_board(self, win):
         for row in range(ROWS):
             for col in range(COLS):
                 x = col * SQUARE_SIZE + BOARD_START_X
@@ -84,11 +88,15 @@ class Board:
             self.selected_tile = tile
             Board.highlight_tile(win, tile)
 
-    def highlight_tile(win ,tile):
-        pygame.draw.line(win, BLUE, (tile.pos_x + STROKE // 2 - 1, tile.pos_y), (tile.pos_x + STROKE // 2 - 1, tile.pos_y + SQUARE_SIZE - 1), STROKE)
-        pygame.draw.line(win, BLUE, (tile.pos_x, tile.pos_y + STROKE // 2 - 1), (tile.pos_x + SQUARE_SIZE - 1, tile.pos_y + STROKE // 2 - 1), STROKE)
-        pygame.draw.line(win, BLUE, (tile.pos_x + SQUARE_SIZE - STROKE // 2 - 1, tile.pos_y), (tile.pos_x + SQUARE_SIZE - STROKE // 2 - 1, tile.pos_y + SQUARE_SIZE - 1), STROKE)
-        pygame.draw.line(win, BLUE, (tile.pos_x, tile.pos_y + SQUARE_SIZE - STROKE // 2 - 1), (tile.pos_x + SQUARE_SIZE - 1, tile.pos_y + SQUARE_SIZE - STROKE // 2 - 1), STROKE)
+    def highlight_tile(win, tile):
+        pygame.draw.line(win, BLUE, (tile.pos_x + STROKE // 2 - 1, tile.pos_y),
+                         (tile.pos_x + STROKE // 2 - 1, tile.pos_y + SQUARE_SIZE - 1), STROKE)
+        pygame.draw.line(win, BLUE, (tile.pos_x, tile.pos_y + STROKE // 2 - 1),
+                         (tile.pos_x + SQUARE_SIZE - 1, tile.pos_y + STROKE // 2 - 1), STROKE)
+        pygame.draw.line(win, BLUE, (tile.pos_x + SQUARE_SIZE - STROKE // 2 - 1, tile.pos_y),
+                         (tile.pos_x + SQUARE_SIZE - STROKE // 2 - 1, tile.pos_y + SQUARE_SIZE - 1), STROKE)
+        pygame.draw.line(win, BLUE, (tile.pos_x, tile.pos_y + SQUARE_SIZE - STROKE // 2 - 1),
+                         (tile.pos_x + SQUARE_SIZE - 1, tile.pos_y + SQUARE_SIZE - STROKE // 2 - 1), STROKE)
 
     def get_tile_from_pos(self, pos):
         mouse_x, mouse_y = pos
@@ -113,3 +121,22 @@ class Board:
             return self.board[row][col]
 
         return None
+
+    def draw_board(self, win):
+        for row in range(ROWS):
+            for col in range(COLS):
+                x = col * SQUARE_SIZE + BOARD_START_X
+                y = row * SQUARE_SIZE + MARGIN
+                pygame.draw.rect(win, BEIGE if (row + col) % 2 == 0 else BROWN,
+                                 (x, y, SQUARE_SIZE, SQUARE_SIZE))
+                self.draw_tile(win, self.board[row][col])
+
+    def draw_game(self, win):
+        win.fill(BACKGROUND)
+        self.draw_board(win)
+        self.draw_stack_panels(win)
+        for i in range(3):
+            self.draw_tile(win, self.left_stack_panel[i])
+            self.draw_tile(win, self.right_stack_panel[i])
+        Button.draw_hover_button(win, RIGHT_PANE_START - MARGIN, MARGIN, BUTTON_HEIGHT, BUTTON_HEIGHT,
+                             "||", BEIGE, HOVER_COLOR)

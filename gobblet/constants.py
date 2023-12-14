@@ -1,9 +1,11 @@
 from enum import Enum
 import pygame
 
+
 class Color(Enum):
     LIGHT = 0
     DARK = 1
+
 
 pygame.init()
 
@@ -18,16 +20,22 @@ LEFT_PANE_START = BOARD_START_X - 2 * MARGIN - SQUARE_SIZE
 RIGHT_PANE_START = BOARD_START_X + BOARD_SIZE + 2 * MARGIN
 STROKE = 4
 
-BUTTON_WIDTH, BUTTON_HEIGHT = 230, 45
+BUTTON_WIDTH, BUTTON_HEIGHT = 220, 45
 BORDER_RADIUS = 15  # Radius for rounded corners
 
 MID_BTN_X = WIDTH // 2 - BUTTON_WIDTH // 2
 LEFT_BTN_X = MID_BTN_X - MARGIN - BUTTON_WIDTH
 RIGHT_BTN_X = MID_BTN_X + MARGIN + BUTTON_WIDTH
 
+DIFFICULITY = [
+    "Easy",
+    "Medium",
+    "Hard"
+]
+
 FONT_SIZE = 22
 FONT = pygame.font.Font("asset\mono.ttf", FONT_SIZE)
-print(pygame.font.get_fonts())
+
 BROWN = (139, 35, 35)
 BEIGE = (222, 184, 135)
 WHITE = (255, 255, 255)
