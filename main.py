@@ -24,14 +24,15 @@ def main():
     run = True
     clock = pygame.time.Clock()
     board = Board(WIN)
-    test(board)
+    # test(board)
     while run:
         clock.tick(FPS)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
             if event.type == pygame.MOUSEBUTTONDOWN:
-                board.move(WIN, board.board[0][3], board.board[0][0])
+                board.select(WIN)
+                # board.move(WIN, board.board[0][3], board.board[0][0])
         pygame.display.update()
     pygame.quit()
 

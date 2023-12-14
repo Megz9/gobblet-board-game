@@ -13,6 +13,7 @@ class Board:
         self.right_stack_panel = [Tile(
             RIGHT_PANE_START, MARGIN + (SQUARE_SIZE/2) + (SQUARE_SIZE * i)) for i in range(3)]
         self.selected_piece = None
+        self.selected_tile = None
         # self.red_left = self.white_left = 12
         # self.red_kings = self.white_kings = 0
 
@@ -33,7 +34,7 @@ class Board:
     def draw_squares(self, win):
         for row in range(ROWS):
             for col in range(COLS):
-                x = col * SQUARE_SIZE + BOARD_START
+                x = col * SQUARE_SIZE + BOARD_START_X
                 y = row * SQUARE_SIZE + MARGIN
                 self.board[row][col] = Tile(x, y)
                 pygame.draw.rect(win, BEIGE if (row + col) % 2 == 0 else BROWN,
@@ -54,7 +55,7 @@ class Board:
         self.draw_tile(win, old_tile)
 
     def draw_tile(self, win, tile):
-        pygame.draw.rect(win, win.get_at((int(tile.pos_x + 1), int(tile.pos_y + 1))),
+        pygame.draw.rect(win, win.get_at((int(tile.pos_x + STROKE + 1), int(tile.pos_y + STROKE + 1))),
                          (tile.pos_x, tile.pos_y, SQUARE_SIZE, SQUARE_SIZE))
         # If the tile is not empty (still has pieces left after removal)
         if tile.pieces_stack != []:
@@ -71,3 +72,44 @@ class Board:
         win.blit(gobblet, (tile.pos_x + SQUARE_SIZE/2 -
                  size, tile.pos_y + SQUARE_SIZE / 2 - size))
         # win.blit(gobblet, (tile.pos_x, tile.pos_y))
+
+    def select(self, win):
+        pos = pygame.mouse.get_pos()
+        tile = self.get_tile_from_pos(pos)
+        if tile != None and self.selected_tile != None:
+            # Check move validity
+            self.move(win, self.selected_tile, tile)
+            self.selected_tile = None
+        elif tile != None and tile.pieces_stack != []:
+            self.selected_tile = tile
+            Board.highlight_tile(win, tile)
+
+    def highlight_tile(win ,tile):
+        pygame.draw.line(win, BLUE, (tile.pos_x + STROKE // 2 - 1, tile.pos_y), (tile.pos_x + STROKE // 2 - 1, tile.pos_y + SQUARE_SIZE - 1), STROKE)
+        pygame.draw.line(win, BLUE, (tile.pos_x, tile.pos_y + STROKE // 2 - 1), (tile.pos_x + SQUARE_SIZE - 1, tile.pos_y + STROKE // 2 - 1), STROKE)
+        pygame.draw.line(win, BLUE, (tile.pos_x + SQUARE_SIZE - STROKE // 2 - 1, tile.pos_y), (tile.pos_x + SQUARE_SIZE - STROKE // 2 - 1, tile.pos_y + SQUARE_SIZE - 1), STROKE)
+        pygame.draw.line(win, BLUE, (tile.pos_x, tile.pos_y + SQUARE_SIZE - STROKE // 2 - 1), (tile.pos_x + SQUARE_SIZE - 1, tile.pos_y + SQUARE_SIZE - STROKE // 2 - 1), STROKE)
+
+    def get_tile_from_pos(self, pos):
+        mouse_x, mouse_y = pos
+        if mouse_y < MARGIN or mouse_y > BOARD_SIZE + MARGIN:
+            return None
+
+        elif mouse_y > MARGIN + SQUARE_SIZE // 2 and mouse_y < MARGIN + 3.5 * SQUARE_SIZE:
+            if mouse_x > RIGHT_PANE_START and mouse_x < RIGHT_PANE_START + SQUARE_SIZE:
+                row = int((mouse_y - MARGIN - SQUARE_SIZE / 2) // SQUARE_SIZE)
+                print(row)
+                return self.right_stack_panel[row]
+
+            if mouse_x > LEFT_PANE_START and mouse_x < LEFT_PANE_START + SQUARE_SIZE:
+                row = int((mouse_y - MARGIN - SQUARE_SIZE / 2) // SQUARE_SIZE)
+                print(row)
+                return self.left_stack_panel[row]
+
+        if mouse_x > BOARD_START_X and mouse_x < BOARD_START_X + BOARD_SIZE:
+            row = int((mouse_y - MARGIN) // SQUARE_SIZE)
+            col = int((mouse_x - BOARD_START_X) // SQUARE_SIZE)
+            print(row, col)
+            return self.board[row][col]
+
+        return None
