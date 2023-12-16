@@ -17,6 +17,15 @@ class Board:
         self.selected_piece = None
         self.selected_tile = None
 
+
+		#to know the selected piece was from which part (board,left_pane,right_pane)
+        self.to_board = None
+        self.to_left_pane = None
+        self.to_right_pane = None
+		
+		self.turn = 0 #black gobblet starts
+
+        
         #rows,columns,diagonals which have 3 elements to allow gobbling it from external stack
         self.critical_case_row = []   #0 ->3 where 0 is the upper row
         self.critical_case_col = []   #0 ->3 where 0 is the leftmost col
@@ -82,16 +91,30 @@ class Board:
         # win.blit(gobblet, (tile.pos_x, tile.pos_y))
 
     def select(self, win):
+        #tile new , self.selected_tile = old
         pos = pygame.mouse.get_pos()
         tile = self.get_tile_from_pos(pos)
         if tile != None and self.selected_tile != None:
             # Check move validity
-            self.move(win, self.selected_tile, tile)
-            self.selected_tile = None
-        elif tile != None and tile.pieces_stack != []:
+            #check game rules
+            if(self.first_sel):
+                if(self.game_Rules(win,self.selected_tile,tile)): #extrenal stack
+                    self.move(win, self.selected_tile, tile)
+                    self.check_repetition(tile.pieces_stack[-1].size,tile.pos_x,tile.pos_y,not self.turn)
+                    self.selected_tile = None
+            elif(self.game_Rules_board(win,self.selected_tile,tile)):
+                self.move(win, self.selected_tile, tile)
+                self.check_repetition(tile.pieces_stack[-1].size,tile.pos_x,tile.pos_y,not self.turn)
+                self.selected_tile = None
+
+        elif tile != None and tile.pieces_stack != [] and ((self.turn == 0 and (tile.pieces_stack[-1].color == Color.DARK)) or(self.turn == 1 and tile.pieces_stack[-1].color == Color.LIGHT)):
+            self.check_moves_for_selected_piece(tile)
             self.selected_tile = tile
+            self.first_sel = self.to_left_pane or self.to_right_pane
+            print(self.first_sel)  
             Board.highlight_tile(win, tile)
-            
+        
+		
     # Check if any row is fully occupied by the player
     def is_row_aligned(self,color):
     
@@ -143,6 +166,34 @@ class Board:
     def check_alignment(self,color):
         
         return (self.is_row_aligned(color) or self.is_column_aligned(color) or self.is_diagonal_aligned(color) )
+		
+		
+	def check_win(self):
+        dark =  self.check_alignment(Color.DARK)
+        light =  self.check_alignment(Color.LIGHT)
+        if(light and dark):
+            print("----DRAW----")
+        elif(light and not dark):
+            print("--Light wins--: ",light)
+        elif(dark and not light):
+            print("--Dark wins--: ",dark)
+
+    def check_size(self,old_tile,new_tile):
+        if(new_tile.pieces_stack!=[] and old_tile.pieces_stack!=[]):
+            if(old_tile.pieces_stack[-1].size<=new_tile.pieces_stack[-1].size):
+                return 0
+        return 1	
+	
+	def check_moves_for_selected_piece(self,tile):
+        for i in range(4):
+            for j in range(4):
+                if self.check_size(tile,self.board[i][j]):
+                    return True
+
+        print("-----no Moveeees-----")
+        return False
+	
+	
     def highlight_tile(win, tile):
         pygame.draw.line(win, BLUE, (tile.pos_x + STROKE // 2 - 1, tile.pos_y),
                          (tile.pos_x + STROKE // 2 - 1, tile.pos_y + SQUARE_SIZE - 1), STROKE)
