@@ -115,6 +115,23 @@ class Board:
             Board.highlight_tile(win, tile)
         
 		
+
+    #rule for moving pieces within board
+    def game_Rules_board(self,win,old_tile,new_tile):
+        row = int((new_tile.pos_y - MARGIN) // SQUARE_SIZE)
+        print("row.....",row)
+        print("critical_row.....",self.critical_case_row)
+        #can't go from board to external stacks or go from external stack to external stack
+        if(self.to_right_pane or self.to_left_pane): 
+           print("can't make move")
+           return 0
+        elif(self.to_board):
+            #go within board or from external stack to board
+            print("board game rules")
+            return self.check_size(old_tile,new_tile)
+
+
+
     # Check if any row is fully occupied by the player
     def is_row_aligned(self,color):
     
@@ -184,6 +201,25 @@ class Board:
                 return 0
         return 1	
 	
+
+    def check_repetition(self,size,pos_x,pos_y,turn):
+        if(turn):
+            self.white_prev_moves[self.white_tuple_array_counter] = (size,pos_x,pos_y)
+            self.white_tuple_array_counter = (self.white_tuple_array_counter + 1) % 6
+        elif(not turn):
+            self.black_prev_moves[self.black_tuple_array_counter] = (size,pos_x,pos_y)
+            self.black_tuple_array_counter = (self.black_tuple_array_counter + 1) % 6
+        print("white prev:",self.white_prev_moves)
+        print("black prev:",self.black_prev_moves)
+        if self.white_prev_moves[0] !=(0,0,0) and ((self.white_prev_moves[0]==self.white_prev_moves[2]==self.white_prev_moves[4]) and(self.white_prev_moves[1]==self.white_prev_moves[3]==self.white_prev_moves[5])):
+            self.white_repetition = 1
+        if self.white_prev_moves[0] !=(0,0,0) and ((self.black_prev_moves[0]==self.black_prev_moves[2]==self.black_prev_moves[4]) and(self.black_prev_moves[1]==self.black_prev_moves[3]==self.black_prev_moves[5])):
+            self.black_repetition = 1
+        if(self.white_repetition == self.black_repetition == 1):
+            print("----Draw----")
+
+
+
 	def check_moves_for_selected_piece(self,tile):
         for i in range(4):
             for j in range(4):
