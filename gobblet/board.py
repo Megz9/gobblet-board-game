@@ -19,6 +19,22 @@ class Board:
         # self.red_left = self.white_left = 12
         # self.red_kings = self.white_kings = 0
 
+        self.turn = 0 #black gobblet starts
+
+        #to know the selected piece was from which part (board,left_pane,right_pane)
+        self.to_board = None
+        self.to_left_pane = None
+        self.to_right_pane = None
+
+        #rows,columns,diagonals which have 3 elements to allow gobbling it from external stack
+        self.critical_case_row = []   #0 ->3 where 0 is the upper row
+        self.critical_case_col = []   #0 ->3 where 0 is the leftmost col
+        self.critical_case_diag = 0 
+        self.critical_case_antidiag = 0  
+
+
+
+
         self.draw_stack_panels(win)
         self.draw_initial_board(win)
 
@@ -57,6 +73,11 @@ class Board:
         new_tile.push_piece(old_tile.pop_piece())
         self.draw_piece(win, new_tile.pieces_stack[-1], new_tile)
         self.draw_tile(win, old_tile)
+        self.to_right_pane = 0
+        self.to_left_pane = 0
+        self.to_board = 0
+        self.turn ^= 1  
+        self.check_win()
 
     def draw_tile(self, win, tile):
         pygame.draw.rect(win, win.get_at((int(tile.pos_x + STROKE + 1), int(tile.pos_y + STROKE + 1))),
@@ -107,20 +128,32 @@ class Board:
             if mouse_x > RIGHT_PANE_START and mouse_x < RIGHT_PANE_START + SQUARE_SIZE:
                 row = int((mouse_y - MARGIN - SQUARE_SIZE / 2) // SQUARE_SIZE)
                 print(row)
+                self.to_right_pane = 1
+                self.to_left_pane = 0
+                self.to_board = 0
                 return self.right_stack_panel[row]
 
             if mouse_x > LEFT_PANE_START and mouse_x < LEFT_PANE_START + SQUARE_SIZE:
                 row = int((mouse_y - MARGIN - SQUARE_SIZE / 2) // SQUARE_SIZE)
                 print(row)
+                self.to_left_pane = 1
+                self.to_right_pane = 0
+                self.to_board = 0
                 return self.left_stack_panel[row]
 
         if mouse_x > BOARD_START_X and mouse_x < BOARD_START_X + BOARD_SIZE:
             row = int((mouse_y - MARGIN) // SQUARE_SIZE)
             col = int((mouse_x - BOARD_START_X) // SQUARE_SIZE)
+            self.current_row = row
+            self.current_col = col
             print(row, col)
+            self.to_board = 1
+            self.to_left_pane = 0
+            self.to_right_pane = 0
             return self.board[row][col]
 
         return None
+     
 
     def draw_board(self, win):
         for row in range(ROWS):
@@ -140,3 +173,26 @@ class Board:
             self.draw_tile(win, self.right_stack_panel[i])
         Button.draw_hover_button(win, RIGHT_PANE_START - MARGIN, MARGIN, BUTTON_HEIGHT, BUTTON_HEIGHT,
                              "||", BEIGE, HOVER_COLOR)
+
+#rule for moving pieces when first selection is external stack
+    def game_Rules(self,win,old_tile,new_tile):
+        row = int((new_tile.pos_y - MARGIN) // SQUARE_SIZE)
+        col = int((new_tile.pos_x - BOARD_START_X) // SQUARE_SIZE)
+        print("row.....",row)
+        print("critical_row.....",self.critical_case_row)
+        #can't go from board to external stacks or go from external stack to external stack
+        if(self.to_right_pane or self.to_left_pane): 
+           print("can't make move")
+           return 0
+        elif(self.to_board):
+            #go within board or from external stack to board
+            if new_tile.pieces_stack == []: #empty tile
+                print("going to board")
+                return 1
+            elif(row in self.critical_case_row or col in self.critical_case_col or self.critical_case_diag !=0 or self.critical_case_antidiag != 0): #allow gobbling from external stack in critical case (3 in same row)
+                if(row in self.critical_case_row): self.critical_case_row.remove(row)
+                if(col in self.critical_case_col): self.critical_case_col.remove(col)
+                self.critical_case_diag = 0
+                self.critical_case_antidiag = 0
+                #print("new list",self.critical_case_row)
+                return self.check_size(old_tile,new_tile)
