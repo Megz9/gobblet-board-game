@@ -8,7 +8,6 @@ from .constants import *
 
 class Board:
     def __init__(self, win):
-        win.fill(BACKGROUND)
         self.board = [[0] * COLS for _ in range(ROWS)]
         self.left_stack_panel = [Tile(
             LEFT_PANE_START, MARGIN + (SQUARE_SIZE/2) + (SQUARE_SIZE * i)) for i in range(3)]
@@ -16,15 +15,14 @@ class Board:
             RIGHT_PANE_START, MARGIN + (SQUARE_SIZE/2) + (SQUARE_SIZE * i)) for i in range(3)]
         self.selected_piece = None
         self.selected_tile = None
-        # self.red_left = self.white_left = 12
-        # self.red_kings = self.white_kings = 0
-
-        self.turn = 0 #black gobblet starts
 
         #to know the selected piece was from which part (board,left_pane,right_pane)
         self.to_board = None
         self.to_left_pane = None
         self.to_right_pane = None
+        
+        self.turn = 0 #black gobblet starts
+
 
         #rows,columns,diagonals which have 3 elements to allow gobbling it from external stack
         self.critical_case_row = []   #0 ->3 where 0 is the upper row
@@ -32,8 +30,21 @@ class Board:
         self.critical_case_diag = 0 
         self.critical_case_antidiag = 0  
 
+        #define the first selection 
+        self.first_sel = 0 #0:means external stack, 1:means selected from board 
 
 
+        #row and column value which is selected
+        self.current_row = None
+        self.current_col = None
+
+        #array of (size,pos_x,pos_y)
+        self.white_prev_moves = [(0, 0, 0) for _ in range(6)]
+        self.black_prev_moves = [(0, 0, 0) for _ in range(6)]
+        self.white_tuple_array_counter = 0
+        self.black_tuple_array_counter = 0
+        self.white_repetition =0
+        self.black_repetition =0
 
         self.draw_stack_panels(win)
         self.draw_initial_board(win)
@@ -51,6 +62,38 @@ class Board:
         Button.draw_hover_button(win, RIGHT_PANE_START - MARGIN, MARGIN, BUTTON_HEIGHT, BUTTON_HEIGHT,
                              "||", BEIGE, HOVER_COLOR)
 
+    def check_repetition(self,size,pos_x,pos_y,turn):
+        if(turn):
+            self.white_prev_moves[self.white_tuple_array_counter] = (size,pos_x,pos_y)
+            self.white_tuple_array_counter = (self.white_tuple_array_counter + 1) % 6
+        elif(not turn):
+            self.black_prev_moves[self.black_tuple_array_counter] = (size,pos_x,pos_y)
+            self.black_tuple_array_counter = (self.black_tuple_array_counter + 1) % 6
+        print("white prev:",self.white_prev_moves)
+        print("black prev:",self.black_prev_moves)
+        if self.white_prev_moves[0] !=(0,0,0) and ((self.white_prev_moves[0]==self.white_prev_moves[2]==self.white_prev_moves[4]) and(self.white_prev_moves[1]==self.white_prev_moves[3]==self.white_prev_moves[5])):
+            self.white_repetition = 1
+        if self.white_prev_moves[0] !=(0,0,0) and ((self.black_prev_moves[0]==self.black_prev_moves[2]==self.black_prev_moves[4]) and(self.black_prev_moves[1]==self.black_prev_moves[3]==self.black_prev_moves[5])):
+            self.black_repetition = 1
+        if(self.white_repetition == self.black_repetition == 1):
+            print("----Draw----")
+
+    def check_moves_for_selected_piece(self,tile):
+        # self.check_stuck_due_to_size()
+        # for row in  self.board:
+        #     for cell in row:
+        #         if not self.check_size(tile,cell):
+        #             return True
+        for i in range(4):
+            for j in range(4):
+                if self.check_size(tile,self.board[i][j]):
+                    return True
+        print("no Moveeees")
+        print("no Moveeees")
+        print("no Moveeees")
+        print("no Moveeees")
+        return False
+    
     def draw_initial_board(self, win):
         for row in range(ROWS):
             for col in range(COLS):
@@ -79,6 +122,7 @@ class Board:
         self.turn ^= 1  
         self.check_win()
 
+
     def draw_tile(self, win, tile):
         pygame.draw.rect(win, win.get_at((int(tile.pos_x + STROKE + 1), int(tile.pos_y + STROKE + 1))),
                          (tile.pos_x, tile.pos_y, SQUARE_SIZE, SQUARE_SIZE))
@@ -99,25 +143,152 @@ class Board:
         # win.blit(gobblet, (tile.pos_x, tile.pos_y))
 
     def select(self, win):
+        #tile new , self.selected_tile = old
         pos = pygame.mouse.get_pos()
         tile = self.get_tile_from_pos(pos)
         if tile != None and self.selected_tile != None:
             # Check move validity
-            self.move(win, self.selected_tile, tile)
-            self.selected_tile = None
-        elif tile != None and tile.pieces_stack != []:
-            self.selected_tile = tile
-            Board.highlight_tile(win, tile)
+            #check game rules
+            if(self.first_sel):
+                if(self.game_Rules(win,self.selected_tile,tile)): #extrenal stack
+                    self.move(win, self.selected_tile, tile)
+                    self.check_repetition(tile.pieces_stack[-1].size,tile.pos_x,tile.pos_y,not self.turn)
+                    self.selected_tile = None
+            elif(self.game_Rules_board(win,self.selected_tile,tile)):
+                self.move(win, self.selected_tile, tile)
+                self.check_repetition(tile.pieces_stack[-1].size,tile.pos_x,tile.pos_y,not self.turn)
+                self.selected_tile = None
 
-    def highlight_tile(win, tile):
-        pygame.draw.line(win, BLUE, (tile.pos_x + STROKE // 2 - 1, tile.pos_y),
-                         (tile.pos_x + STROKE // 2 - 1, tile.pos_y + SQUARE_SIZE - 1), STROKE)
-        pygame.draw.line(win, BLUE, (tile.pos_x, tile.pos_y + STROKE // 2 - 1),
-                         (tile.pos_x + SQUARE_SIZE - 1, tile.pos_y + STROKE // 2 - 1), STROKE)
-        pygame.draw.line(win, BLUE, (tile.pos_x + SQUARE_SIZE - STROKE // 2 - 1, tile.pos_y),
-                         (tile.pos_x + SQUARE_SIZE - STROKE // 2 - 1, tile.pos_y + SQUARE_SIZE - 1), STROKE)
-        pygame.draw.line(win, BLUE, (tile.pos_x, tile.pos_y + SQUARE_SIZE - STROKE // 2 - 1),
-                         (tile.pos_x + SQUARE_SIZE - 1, tile.pos_y + SQUARE_SIZE - STROKE // 2 - 1), STROKE)
+        elif tile != None and tile.pieces_stack != [] and ((self.turn == 0 and (tile.pieces_stack[-1].color == Color.DARK)) or(self.turn == 1 and tile.pieces_stack[-1].color == Color.LIGHT)):
+            self.check_moves_for_selected_piece(tile)
+            self.selected_tile = tile
+            self.first_sel = self.to_left_pane or self.to_right_pane
+            print(self.first_sel)  
+            Board.highlight_tile(win, tile)
+        
+    
+    #rule for moving pieces when first selection is external stack
+    def game_Rules(self,win,old_tile,new_tile):
+        row = int((new_tile.pos_y - MARGIN) // SQUARE_SIZE)
+        col = int((new_tile.pos_x - BOARD_START_X) // SQUARE_SIZE)
+        print("row.....",row)
+        print("critical_row.....",self.critical_case_row)
+        #can't go from board to external stacks or go from external stack to external stack
+        if(self.to_right_pane or self.to_left_pane): 
+           print("can't make move")
+           return 0
+        elif(self.to_board):
+            #go within board or from external stack to board
+            if new_tile.pieces_stack == []: #empty tile
+                print("going to board")
+                return 1
+            elif(row in self.critical_case_row or col in self.critical_case_col or self.critical_case_diag !=0 or self.critical_case_antidiag != 0): #allow gobbling from external stack in critical case (3 in same row)
+                if(row in self.critical_case_row): self.critical_case_row.remove(row)
+                if(col in self.critical_case_col): self.critical_case_col.remove(col)
+                self.critical_case_diag = 0
+                self.critical_case_antidiag = 0
+                #print("new list",self.critical_case_row)
+                return self.check_size(old_tile,new_tile)
+            
+                
+    #rule for moving pieces within board
+    def game_Rules_board(self,win,old_tile,new_tile):
+        row = int((new_tile.pos_y - MARGIN) // SQUARE_SIZE)
+        print("row.....",row)
+        print("critical_row.....",self.critical_case_row)
+        #can't go from board to external stacks or go from external stack to external stack
+        if(self.to_right_pane or self.to_left_pane): 
+           print("can't make move")
+           return 0
+        elif(self.to_board):
+            #go within board or from external stack to board
+            print("board game rules")
+            return self.check_size(old_tile,new_tile)
+            
+             
+ 
+    def is_row_aligned(self,color):
+    # Check if any row is fully occupied by the player 
+        for row_index,row in enumerate(self.board): #enumerate is to add an index to an iteratable
+            positions = [row_index for row_index, cell in enumerate(row) if (cell.pieces_stack!=[] and cell.pieces_stack[-1].color == color)]
+            if len(positions) == 3 :
+                if(not row_index in self.critical_case_row):
+                    self.critical_case_row.append(row_index)
+                    print("the row is: ",row_index)
+            elif len(positions) == 4:
+                return True
+            
+
+        return False
+    def is_column_aligned(self,color):
+        # Check if any col is fully occupied by the player 
+        for col_index,col in enumerate(zip(*self.board)): #enumerate is to add an index to an iteratable
+            positions = [col_index for col_index, cell in enumerate(col) if (cell.pieces_stack!=[] and cell.pieces_stack[-1].color == color)]
+            if len(positions) == 3 :
+                if(not col_index in self.critical_case_col):
+                    self.critical_case_col.append(col_index)
+                    print("the column is: ",col_index)
+            elif len(positions) == 4:
+                return True
+            
+        return False
+
+
+    def is_diagonal_aligned(self, color):
+        # Check if any diagonal is fully occupied by the player 
+        # Main diagonal
+        main_diagonal_positions = [i for i in range(4) if (self.board[i][i].pieces_stack != [] and self.board[i][i].pieces_stack[-1].color == color)]
+        if len(main_diagonal_positions) == 3:
+            self.critical_case_diag = 1
+        elif len(main_diagonal_positions) == 4:
+            return True
+
+        # Antidiagonal
+        antidiagonal_positions = [i for i in range(4) if (self.board[i][3 - i].pieces_stack != [] and self.board[i][3 - i].pieces_stack[-1].color == color)]
+        if len(antidiagonal_positions) == 3:
+            self.critical_case_antidiag = 1
+        elif len(antidiagonal_positions) == 4:
+            return True
+
+        return False
+
+
+    # def is_diagonal_aligned(self, color):
+    #     # Check if any diagonal is fully occupied by the player 
+    #     # Main diagonal
+    #     if all((self.board[i][i].pieces_stack!=[] and self.board[i][i].pieces_stack[-1].color == color) for i in range(4)):
+    #         return True
+    #     # Antidiagonal
+    #     if all((self.board[i][3-i].pieces_stack!=[] and self.board[i][3 - i].pieces_stack[-1].color == color) for i in range(4)):
+    #         return True
+    #     return False
+
+    def check_alignment(self,color):
+        # Check for alignment in rows, columns, or diagonals for a player 
+        return (self.is_row_aligned(color) or self.is_column_aligned(color) or self.is_diagonal_aligned(color) )
+    
+    def check_win(self):
+        dark =  self.check_alignment(Color.DARK)
+        light =  self.check_alignment(Color.LIGHT)
+        if(light and dark):
+            print("----DRAW----")
+        elif(light and not dark):
+            print("--Light wins--: ",light)
+        elif(dark and not light):
+            print("--Dark wins--: ",dark)
+
+    def check_size(self,old_tile,new_tile):
+        if(new_tile.pieces_stack!=[] and old_tile.pieces_stack!=[]):
+            if(old_tile.pieces_stack[-1].size<=new_tile.pieces_stack[-1].size):
+                return 0
+        return 1
+            
+
+    def highlight_tile(win ,tile):
+        pygame.draw.line(win, BLUE, (tile.pos_x + STROKE // 2 - 1, tile.pos_y), (tile.pos_x + STROKE // 2 - 1, tile.pos_y + SQUARE_SIZE - 1), STROKE)
+        pygame.draw.line(win, BLUE, (tile.pos_x, tile.pos_y + STROKE // 2 - 1), (tile.pos_x + SQUARE_SIZE - 1, tile.pos_y + STROKE // 2 - 1), STROKE)
+        pygame.draw.line(win, BLUE, (tile.pos_x + SQUARE_SIZE - STROKE // 2 - 1, tile.pos_y), (tile.pos_x + SQUARE_SIZE - STROKE // 2 - 1, tile.pos_y + SQUARE_SIZE - 1), STROKE)
+        pygame.draw.line(win, BLUE, (tile.pos_x, tile.pos_y + SQUARE_SIZE - STROKE // 2 - 1), (tile.pos_x + SQUARE_SIZE - 1, tile.pos_y + SQUARE_SIZE - STROKE // 2 - 1), STROKE)
 
     def get_tile_from_pos(self, pos):
         mouse_x, mouse_y = pos
@@ -153,7 +324,7 @@ class Board:
             return self.board[row][col]
 
         return None
-     
+
 
     def draw_board(self, win):
         for row in range(ROWS):
@@ -173,26 +344,4 @@ class Board:
             self.draw_tile(win, self.right_stack_panel[i])
         Button.draw_hover_button(win, RIGHT_PANE_START - MARGIN, MARGIN, BUTTON_HEIGHT, BUTTON_HEIGHT,
                              "||", BEIGE, HOVER_COLOR)
-
-#rule for moving pieces when first selection is external stack
-    def game_Rules(self,win,old_tile,new_tile):
-        row = int((new_tile.pos_y - MARGIN) // SQUARE_SIZE)
-        col = int((new_tile.pos_x - BOARD_START_X) // SQUARE_SIZE)
-        print("row.....",row)
-        print("critical_row.....",self.critical_case_row)
-        #can't go from board to external stacks or go from external stack to external stack
-        if(self.to_right_pane or self.to_left_pane): 
-           print("can't make move")
-           return 0
-        elif(self.to_board):
-            #go within board or from external stack to board
-            if new_tile.pieces_stack == []: #empty tile
-                print("going to board")
-                return 1
-            elif(row in self.critical_case_row or col in self.critical_case_col or self.critical_case_diag !=0 or self.critical_case_antidiag != 0): #allow gobbling from external stack in critical case (3 in same row)
-                if(row in self.critical_case_row): self.critical_case_row.remove(row)
-                if(col in self.critical_case_col): self.critical_case_col.remove(col)
-                self.critical_case_diag = 0
-                self.critical_case_antidiag = 0
-                #print("new list",self.critical_case_row)
-                return self.check_size(old_tile,new_tile)
+     

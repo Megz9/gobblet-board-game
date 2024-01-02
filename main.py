@@ -1,6 +1,7 @@
 import pygame
 from gobblet.button import Button
 from gobblet.board import Board
+from gobblet.board_test import Board_Test
 from gobblet.constants import *
 from gobblet.piece import Piece
 
@@ -11,15 +12,15 @@ pygame.display.set_caption('Gobblet')
 clock = pygame.time.Clock()
 
 
-def test(board):
-    board.board[0][0].push_piece(Piece(Color.DARK, 1))
-    board.board[0][1].push_piece(Piece(Color.DARK, 2))
-    board.board[0][2].push_piece(Piece(Color.DARK, 3))
-    board.board[0][3].push_piece(Piece(Color.DARK, 4))
-    board.draw_piece(WIN, Piece(Color.DARK, 1), board.board[0][0])
-    board.draw_piece(WIN, Piece(Color.DARK, 2), board.board[0][1])
-    board.draw_piece(WIN, Piece(Color.DARK, 3), board.board[0][2])
-    board.draw_piece(WIN, Piece(Color.DARK, 4), board.board[0][3])
+# def test(board):
+#     board.board[0][0].push_piece(Piece(Color.DARK, 1))
+#     board.board[0][1].push_piece(Piece(Color.DARK, 2))
+#     board.board[0][2].push_piece(Piece(Color.DARK, 3))
+#     board.board[0][3].push_piece(Piece(Color.DARK, 4))
+#     board.draw_piece(WIN, Piece(Color.DARK, 1), board.board[0][0])
+#     board.draw_piece(WIN, Piece(Color.DARK, 2), board.board[0][1])
+#     board.draw_piece(WIN, Piece(Color.DARK, 3), board.board[0][2])
+#     board.draw_piece(WIN, Piece(Color.DARK, 4), board.board[0][3])
 
 
 def main():
@@ -44,7 +45,10 @@ def main():
                                  "Human vs AI", BEIGE if Button.selected_mode != 1 else WHITE, HOVER_COLOR if Button.selected_mode != 1 else WHITE)
         Button.draw_hover_button(WIN, RIGHT_BTN_X, HEIGHT // 2, BUTTON_WIDTH, BUTTON_HEIGHT,
                                  "AI vs AI", BEIGE if Button.selected_mode != 2 else WHITE, HOVER_COLOR if Button.selected_mode != 2 else WHITE)
-        if Button.selected_mode == 1:
+        if Button.selected_mode == 0 :
+             Button.draw_hover_button(WIN, MID_BTN_X - 0.125 * BUTTON_WIDTH, HEIGHT // 2 + 4 * MARGIN // 5 + BUTTON_HEIGHT, BUTTON_WIDTH * 1.25, BUTTON_HEIGHT,
+                                     f"Difficulty: {DIFFICULITY[Button.selected_difficulty]}", DISABLED_BUTTON, DISABLED_BUTTON_HOVER)
+        elif Button.selected_mode == 1:
             Button.draw_hover_button(WIN, MID_BTN_X - 0.125 * BUTTON_WIDTH, HEIGHT // 2 + 4 * MARGIN // 5 + BUTTON_HEIGHT, BUTTON_WIDTH * 1.25, BUTTON_HEIGHT,
                                      f"Difficulty: {DIFFICULITY[Button.selected_difficulty]}", BEIGE, HOVER_COLOR)
         elif Button.selected_mode == 2:
@@ -83,7 +87,10 @@ def check_button_clicks():
 
 
 def play():
-    board = Board(WIN)
+    if Button.selected_mode == 0 : # initiate board with human rules
+        board = Board(WIN)
+    else :
+        board = Board_Test(WIN)
     # test(board)
     while True:
         clock.tick(FPS)
