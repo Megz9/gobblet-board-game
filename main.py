@@ -102,7 +102,7 @@ def play():
                     if pause(board) == 2:
                         return
                 else:
-                    board.select(WIN)
+                    board.select()
                 # board.move(WIN, board.board[0][3], board.board[0][0])
         pygame.display.update()
 
@@ -134,7 +134,7 @@ def pause(board):
 def check_pause_clicks(board):
     MIDDLE_BTN_HEIGHT = HEIGHT // 2 - BUTTON_HEIGHT // 2
     if Button.is_mouse_over_button(MID_BTN_X, MIDDLE_BTN_HEIGHT - MARGIN - BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT):
-        board.draw_game(WIN)
+        board.draw_game()
         return 1
     if Button.is_mouse_over_button(MID_BTN_X, MIDDLE_BTN_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT):
         board.__init__(WIN)

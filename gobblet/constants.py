@@ -34,7 +34,8 @@ DIFFICULITY = [
 ]
 
 FONT_SIZE = 22
-FONT = pygame.font.Font("asset\mono.ttf", FONT_SIZE)
+
+FONT = pygame.font.Font("asset/mono.ttf", FONT_SIZE)
 
 BROWN = (139, 35, 35)
 BEIGE = (222, 184, 135)
