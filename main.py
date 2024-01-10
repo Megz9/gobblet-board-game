@@ -1,4 +1,5 @@
 import pygame
+from gobblet.ai import MinMax
 from gobblet.button import Button
 from gobblet.board import Board
 from gobblet.board_test import Board_Test
@@ -87,11 +88,13 @@ def check_button_clicks():
 
 
 def play():
-    if Button.selected_mode == 0 : # initiate board with human rules
-        board = Board(WIN)
-    else :
-        board = Board_Test(WIN)
+    # if Button.selected_mode == 0 : # initiate board with human rules
+    #     board = Board(WIN)
+    # else :
+    #     board = Board_Test(WIN)
     # test(board)
+    
+    board = Board(WIN)
     while True:
         clock.tick(FPS)
         for event in pygame.event.get():
@@ -105,6 +108,12 @@ def play():
                     board.select()
                 # board.move(WIN, board.board[0][3], board.board[0][0])
         pygame.display.update()
+        if board.turn and Button.selected_mode >=1 :
+            MinMax.available_moves = []
+            MinMax.minimax(board, 0) # at 7:45
+        elif board.turn == 0 and Button.selected_mode ==2 :
+            MinMax.available_moves = []
+            MinMax.minimax(board, 0) # at 7:45
 
 
 def pause(board):
