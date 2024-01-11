@@ -46,28 +46,27 @@ class MinMax:
                         tile.push_piece(board.board[i][j].pop_piece())
         return list
     
-    # f[player] * (w - b)
-    def evaluate(board, player):
-        count = 0
+    def evaluate(board):
+        if board.check_win() == 1:
+            return float('-inf')
+        elif board.check_win() == -1:
+            return float('inf')
+        left_diagonal_count, right_diagonal_count = 0, 0
+        count = []
         for i in range(4):
-            count += MinMax.evaluate_tile(board.board[i][i], player) + \
-                MinMax.evaluate_tile(board.board[i][3 - i], player)
+            row_count, col_count = 0, 0
+            left_diagonal_count += MinMax.evaluate_tile(board.board[i][i], i, i)
+            right_diagonal_count += MinMax.evaluate_tile(board.board[i][3 - i], i, i)
             for j in range(4):
-                count += MinMax.evaluate_tile(board.board[i][j], player) + \
-                    MinMax.evaluate_tile(board.board[j][i], player)
-        return count
+                row_count += MinMax.evaluate_tile(board.board[i][j], i, j)
+                col_count += MinMax.evaluate_tile(board.board[j][i], i, j)
+            count.extend([row_count, col_count])
+        count.extend([left_diagonal_count, right_diagonal_count])
+        return max(count) if not board.turn else min(count)
+            
 
-    def evaluate_tile(tile, player):
-        f = [1, -1]
-        white_count = 0
-        black_count = 0
-        count = 0
+    def evaluate_tile(tile, i, j):
         if len(tile.pieces_stack) == 0:
-            count += 1
-        elif tile.pieces_stack[-1].color == Color.LIGHT:
-            white_count += (tile.pieces_stack[-1].size + 1)
-        else:
-            black_count += (tile.pieces_stack[-1].size + 1)
-
-        return f[player] * (white_count - black_count) + count
-
+            return 3 if i == j or i == (3 - j) else 2
+        val = (3 if i == j or i == (3 - j) else 2) * (16 + tile.pieces_stack[-1].size)
+        return val if tile.pieces_stack[-1].color == Color.DARK else -val
