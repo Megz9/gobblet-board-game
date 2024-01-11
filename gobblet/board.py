@@ -23,6 +23,7 @@ class Board:
         
         self.turn = 0 #black gobblet starts
 
+        self.repetition_draw = False  #Flag to indicate DRAW when repeating moves
 
         #rows,columns,diagonals which have 3 elements to allow gobbling it from external stack
         self.critical_case_row = []   #0 ->3 where 0 is the upper row
@@ -74,6 +75,7 @@ class Board:
             self.black_repetition = 1
         if(self.white_repetition == self.black_repetition == 1):
             print("----Draw----")
+            self.repetition_draw = True
 
     def check_moves_for_selected_piece(self,tile):
         # self.check_stuck_due_to_size()
@@ -272,7 +274,8 @@ class Board:
     def check_win(self):
         dark =  self.check_alignment(Color.DARK)
         light =  self.check_alignment(Color.LIGHT)
-        if(light and dark):
+        if((light and dark) or self.repetition_draw):
+            print(self.repetition_draw)
             return 0
             print("----DRAW----")
         elif(light and not dark):

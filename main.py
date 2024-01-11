@@ -108,6 +108,9 @@ def play():
                     board.select()
                 # board.move(WIN, board.board[0][3], board.board[0][0])
         pygame.display.update()
+        if board.check_win() != 2:
+            if player_wins(board) == 2:
+                return
         if board.turn and Button.selected_mode >=1 :
             MinMax.available_moves = []
             MinMax.minimax(board, 0) # at 7:45
@@ -151,6 +154,68 @@ def check_pause_clicks(board):
     if Button.is_mouse_over_button(MID_BTN_X, MIDDLE_BTN_HEIGHT + MARGIN + BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT):
         return 2
     return 0
+
+def player_wins(board):
+    s = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)   # per-pixel alpha
+    # notice the alpha value in the color
+    if(board.check_win() == -1): win_text = "Black Wins"
+    elif(board.check_win() == 1): win_text = "White Wins"
+    elif(board.check_win() == 0): win_text = "Draw"
+
+    s.fill((0, 0, 0, 128))
+    WIN.blit(s, (0, 0))
+    MIDDLE_BTN_HEIGHT = HEIGHT // 2 - BUTTON_HEIGHT // 2
+    # font = pygame.font.Font('asset/mono.ttf', 60)
+    # text_surface = font.render(win_text, True, WHITE)
+    # text_rect = text_surface.get_rect(center=(MID_BTN_X + BUTTON_WIDTH/2, MIDDLE_BTN_HEIGHT - MARGIN - BUTTON_HEIGHT/2))
+    dropShadowText(win_text,60,MID_BTN_X + BUTTON_WIDTH/2,MIDDLE_BTN_HEIGHT - MARGIN - BUTTON_HEIGHT/2, WHITE, BLACK, 'asset/mono.ttf')
+    # WIN.blit(text_surface, text_rect)
+    # Button.draw_hover_button(WIN, MID_BTN_X, MIDDLE_BTN_HEIGHT - MARGIN - BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT,
+    #                          "Resume", BEIGE, HOVER_COLOR)
+    Button.draw_hover_button(WIN, MID_BTN_X, MIDDLE_BTN_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT,
+                             "Restart", BEIGE, HOVER_COLOR)
+    Button.draw_hover_button(WIN, MID_BTN_X, MIDDLE_BTN_HEIGHT + MARGIN + BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT,
+                             "Main Menu", BEIGE, HOVER_COLOR)
+    while True:
+        clock.tick(FPS)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                Button.exit_game()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                check = check_win_clicks(board)
+                if check:
+                    return check
+        pygame.display.update()
+
+
+def check_win_clicks(board):
+    MIDDLE_BTN_HEIGHT = HEIGHT // 2 - BUTTON_HEIGHT // 2
+    # if Button.is_mouse_over_button(MID_BTN_X, MIDDLE_BTN_HEIGHT - MARGIN - BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT):
+    #     board.draw_game()
+    #     return 1
+    if Button.is_mouse_over_button(MID_BTN_X, MIDDLE_BTN_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT):
+        board.__init__(WIN)
+        return 1
+    if Button.is_mouse_over_button(MID_BTN_X, MIDDLE_BTN_HEIGHT + MARGIN + BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT):
+        return 2
+    return 0
+
+
+def dropShadowText(text, size, x, y, colour=(255,255,255), drop_colour=(128,128,128), font=None):
+    # how much 'shadow distance' is best?
+    dropshadow_offset = 1 + (size // 15)
+    text_font = pygame.font.Font(font, size)
+    # make the drop-shadow
+    text_surface = text_font.render(text, True, drop_colour)
+    # text_surface = font.render(win_text, True, WHITE)
+    text_rect = text_surface.get_rect(center=(x+dropshadow_offset, y+dropshadow_offset))
+    # screen.blit(text_bitmap, (x+dropshadow_offset, y+dropshadow_offset) )
+    WIN.blit(text_surface, text_rect)
+    # make the overlay text
+    text_surface = text_font.render(text, True, colour)
+    text_rect = text_surface.get_rect(center=(x,y))
+    WIN.blit(text_surface, text_rect)
+    # screen.blit(text_bitmap, (x, y) )
 
 
 main()
