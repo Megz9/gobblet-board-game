@@ -145,7 +145,7 @@ class Board:
         if tile != None and self.selected_tile != None:
             # Check move validity
             # check game rules
-            if self.game_Rules(self.selected_tile,tile):
+            if self.game_Rules(self.selected_tile,tile,False):
                 self.move(self.selected_tile, tile)
                 self.selected_tile = None
 
@@ -158,7 +158,7 @@ class Board:
         
     
     #rule for moving pieces when first selection is external stack
-    def game_Rules(self,old_tile,new_tile):
+    def game_Rules(self,old_tile,new_tile,in_test):
         # print("Entered game rules")
         row = int((new_tile.pos_y - MARGIN) // SQUARE_SIZE)
         col = int((new_tile.pos_x - BOARD_START_X) // SQUARE_SIZE)
@@ -177,10 +177,11 @@ class Board:
                 # print("going to board")
                 return 1
             elif(row in self.critical_case_row or col in self.critical_case_col or self.critical_case_diag !=0 or self.critical_case_antidiag != 0): #allow gobbling from external stack in critical case (3 in same row)
-                if(row in self.critical_case_row): self.critical_case_row.remove(row)
-                if(col in self.critical_case_col): self.critical_case_col.remove(col)
-                self.critical_case_diag = 0
-                self.critical_case_antidiag = 0
+                if not in_test:
+                    if(row in self.critical_case_row): self.critical_case_row.remove(row)
+                    if(col in self.critical_case_col): self.critical_case_col.remove(col)
+                    self.critical_case_diag = 0
+                    self.critical_case_antidiag = 0
                 # print("new list",self.critical_case_row)
                 return self.check_size(old_tile,new_tile)
     
