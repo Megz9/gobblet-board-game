@@ -29,7 +29,7 @@ class Board:
         self.critical_case_row = []   #0 ->3 where 0 is the upper row
         self.critical_case_col = []   #0 ->3 where 0 is the leftmost col
         self.critical_case_diag = 0 
-        self.critical_case_antidiag = 0  
+        self.critical_case_antidiag = 0
 
 
         #row and column value which is selected
@@ -41,8 +41,6 @@ class Board:
         self.black_prev_moves = [(0, 0, 0) for _ in range(6)]
         self.white_tuple_array_counter = 0
         self.black_tuple_array_counter = 0
-        self.white_repetition =0
-        self.black_repetition =0
 
         self.draw_stack_panels()
         self.draw_initial_board()
@@ -61,6 +59,8 @@ class Board:
                              "||", BEIGE, HOVER_COLOR)
 
     def check_repetition(self,size,pos_x,pos_y,turn):
+        white_repetition = 0
+        black_repetition = 0
         if(turn):
             self.white_prev_moves[self.white_tuple_array_counter] = (size,pos_x,pos_y)
             self.white_tuple_array_counter = (self.white_tuple_array_counter + 1) % 6
@@ -70,10 +70,10 @@ class Board:
         # print("white prev:",self.white_prev_moves)
         # print("black prev:",self.black_prev_moves)
         if self.white_prev_moves[0] !=(0,0,0) and ((self.white_prev_moves[0]==self.white_prev_moves[2]==self.white_prev_moves[4]) and(self.white_prev_moves[1]==self.white_prev_moves[3]==self.white_prev_moves[5])):
-            self.white_repetition = 1
+            white_repetition = 1
         if self.white_prev_moves[0] !=(0,0,0) and ((self.black_prev_moves[0]==self.black_prev_moves[2]==self.black_prev_moves[4]) and(self.black_prev_moves[1]==self.black_prev_moves[3]==self.black_prev_moves[5])):
-            self.black_repetition = 1
-        if(self.white_repetition == self.black_repetition == 1):
+            black_repetition = 1
+        if(white_repetition == black_repetition == 1):
             print("----Draw----")
             self.repetition_draw = True
 
@@ -115,10 +115,8 @@ class Board:
         self.to_right_pane = 0
         self.to_left_pane = 0
         self.to_board = 0
-        self.turn ^= 1  
-        self.check_win()
+        self.turn ^= 1
         self.check_repetition(new_tile.pieces_stack[-1].size,new_tile.pos_x,new_tile.pos_y,not self.turn)
-        
 
 
     def draw_tile(self, tile):
@@ -147,7 +145,7 @@ class Board:
         if tile != None and self.selected_tile != None:
             # Check move validity
             # check game rules
-            if self.game_Rules(self.selected_tile,tile,False):
+            if self.game_Rules(self.selected_tile,tile):
                 self.move(self.selected_tile, tile)
                 self.selected_tile = None
 
@@ -160,7 +158,7 @@ class Board:
         
     
     #rule for moving pieces when first selection is external stack
-    def game_Rules(self,old_tile,new_tile,in_test):
+    def game_Rules(self,old_tile,new_tile):
         # print("Entered game rules")
         row = int((new_tile.pos_y - MARGIN) // SQUARE_SIZE)
         col = int((new_tile.pos_x - BOARD_START_X) // SQUARE_SIZE)
@@ -178,12 +176,11 @@ class Board:
             elif new_tile.pieces_stack == []: #empty tile
                 # print("going to board")
                 return 1
-            elif(row in self.critical_case_row or col in self.critical_case_col or self.critical_case_diag !=0 or self.critical_case_antidiag != 0): #allow gobbling from external stack in critical case (3 in same row)
-                if not in_test:
-                    if(row in self.critical_case_row): self.critical_case_row.remove(row)
-                    if(col in self.critical_case_col): self.critical_case_col.remove(col)
-                    self.critical_case_diag = 0
-                    self.critical_case_antidiag = 0
+            elif(row in self.critical_case_row or col in self.critical_case_col or (self.critical_case_diag != 0  and row == col) or (self.critical_case_antidiag != 0  and row == 3-col)): #allow gobbling from external stack in critical case (3 in same row)
+                if(row in self.critical_case_row): self.critical_case_row.remove(row)
+                if(col in self.critical_case_col): self.critical_case_col.remove(col)
+                if(self.critical_case_diag != 0  and row == col): self.critical_case_diag = 0
+                if(self.critical_case_antidiag != 0  and row == 3-col): self.critical_case_antidiag = 0
                 # print("new list",self.critical_case_row)
                 return self.check_size(old_tile,new_tile)
     
@@ -269,27 +266,22 @@ class Board:
 
     def check_alignment(self,color):
         # Check for alignment in rows, columns, or diagonals for a player 
-        return (self.is_row_aligned(color) or self.is_column_aligned(color) or self.is_diagonal_aligned(color) )
+        return (self.is_row_aligned(color) or self.is_column_aligned(color) or self.is_diagonal_aligned(color))
     
     def check_win(self):
         dark =  self.check_alignment(Color.DARK)
         light =  self.check_alignment(Color.LIGHT)
         if((light and dark) or self.repetition_draw):
-            print(self.repetition_draw)
             return 0
-            print("----DRAW----")
         elif(light and not dark):
             return 1
-            print("--Light wins--: ",light)
         elif(dark and not light):
             return -1
-            print("--Dark wins--: ",dark)
         else:
             return 2
 
     def check_size(self,old_tile,new_tile):
-        if(new_tile.pieces_stack!=[] and old_tile.pieces_stack!=[]):
-            if(old_tile.pieces_stack[-1].size<=new_tile.pieces_stack[-1].size):
+        if(new_tile.pieces_stack!=[] and old_tile.pieces_stack!=[] and old_tile.pieces_stack[-1].size<=new_tile.pieces_stack[-1].size):
                 return 0
         return 1
             
