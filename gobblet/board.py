@@ -117,6 +117,8 @@ class Board:
         self.to_board = 0
         self.turn ^= 1
         self.check_repetition(new_tile.pieces_stack[-1].size,new_tile.pos_x,new_tile.pos_y,not self.turn)
+        pygame.mixer.music.load('asset/move.wav')
+        pygame.mixer.music.play(1)
 
 
     def draw_tile(self, tile):

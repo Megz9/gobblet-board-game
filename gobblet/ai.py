@@ -103,6 +103,40 @@ class MinMax:
         return val if tile.pieces_stack[-1].color == Color.DARK else -val
 
 
+    def evaluate_medium(board, depth):
+        winner = board.check_win()
+        if winner == 1: return -INFINITY + depth
+        elif winner == -1: return INFINITY - depth
+        elif winner == 0: return 0
+        n_human, n_ai, s_human, s_ai = 0, 0, 0, 0
+        rows_ai, cols_ai, diag_ai, rows_human, cols_human, diag_human = [0, 0, 0, 0], [0, 0, 0, 0], [0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0]
+        for i in range(4):
+            for j in range(4):
+                if len(board.board[i][j].pieces_stack) !=0:
+                    if board.board[i][j].pieces_stack[-1].color == Color.LIGHT:
+                        n_human += 1
+                        s_human += board.board[i][j].pieces_stack[-1].size
+                        rows_human[i] += 1
+                        cols_human[j] += 1
+                        if i == j: diag_human[0] += 1
+                        if i == 3 - j: diag_human[1] += 1
+                    else:
+                        n_ai += 1
+                        s_ai += board.board[i][j].pieces_stack[-1].size
+                        rows_ai[i] += 1
+                        cols_ai[j] += 1
+                        if i == j: diag_ai[0] += 1
+                        if i == 3 - j: diag_ai[1] += 1
+        
+        w_ai = rows_ai.count(3) + cols_ai.count(3) + diag_ai.count(3)
+        c_ai = 10 - rows_ai.count(0) + cols_ai.count(0) + diag_ai.count(0)
+
+        w_human = rows_human.count(3) + cols_human.count(3) + diag_human.count(3)
+        c_human = 10 - rows_human.count(0) + cols_human.count(0) + diag_human.count(0)
+
+        return 10 * (n_ai - n_human) + 100 * (w_ai - w_human) + 5 * (c_ai - c_human) + (s_ai - s_human)
+
+
     def backup(board):
         return [board.critical_case_row.copy(),
                 board.critical_case_col.copy(),
