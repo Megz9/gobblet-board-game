@@ -150,6 +150,9 @@ class Board:
             if self.game_Rules(self.selected_tile,tile):
                 self.move(self.selected_tile, tile)
                 self.selected_tile = None
+            else:
+                pygame.mixer.music.load('asset/invalid.wav')
+                pygame.mixer.music.play(1)
 
         elif tile != None and tile.pieces_stack != [] and (tile.pieces_stack[-1].color.value == self.turn):
             self.check_moves_for_selected_piece(tile)
@@ -157,6 +160,8 @@ class Board:
             # self.first_sel = self.to_left_pane or self.to_right_pane
             # print(self.first_sel)  
             self.highlight_tile(tile)
+            pygame.mixer.music.load('asset/pick.wav')
+            pygame.mixer.music.play(1)
         
     
     #rule for moving pieces when first selection is external stack

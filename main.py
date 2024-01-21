@@ -88,12 +88,8 @@ def check_button_clicks():
 
 
 def play():
-    # if Button.selected_mode == 0 : # initiate board with human rules
-    #     board = Board(WIN)
-    # else :
-    #     board = Board_Test(WIN)
-    # test(board)
-    
+    pygame.mixer.music.load('asset/start.wav')
+    pygame.mixer.music.play(1)
     board = Board(WIN)
     while True:
         clock.tick(FPS)
@@ -102,21 +98,18 @@ def play():
                 Button.exit_game()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if Button.is_mouse_over_button(RIGHT_PANE_START - MARGIN, MARGIN, BUTTON_HEIGHT, BUTTON_HEIGHT):
-                    if pause(board) == 2:
-                        return
-                else:
-                    board.select()
-                # board.move(WIN, board.board[0][3], board.board[0][0])
+                    if pause(board) == 2: return
+                else: board.select()
         pygame.display.update()
         if board.check_win() != 2:
             if player_wins(board) == 2:
                 return
-        if board.turn and Button.selected_mode >=1 :
+        if board.turn and Button.selected_mode >= 1:
             MinMax.available_moves = []
-            MinMax.minimax(board, 0) # at 7:45
-        elif board.turn == 0 and Button.selected_mode ==2 :
+            MinMax.minimax(board, 0, Button.selected_difficulty) # at 7:45
+        elif board.turn == 0 and Button.selected_mode == 2:
             MinMax.available_moves = []
-            MinMax.minimax(board, 0) # at 7:45
+            MinMax.minimax(board, 0, Button.selected_difficulty_two) # at 7:45
 
 
 def pause(board):
@@ -150,6 +143,7 @@ def check_pause_clicks(board):
         return 1
     if Button.is_mouse_over_button(MID_BTN_X, MIDDLE_BTN_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT):
         board.__init__(WIN)
+        board.draw_game()
         return 1
     if Button.is_mouse_over_button(MID_BTN_X, MIDDLE_BTN_HEIGHT + MARGIN + BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT):
         return 2

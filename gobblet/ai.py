@@ -5,23 +5,26 @@ from gobblet.constants import INFINITY, MAX_DEPTH, Color
 class MinMax:
 
     available_moves = []
-    # def game_Rules(self,win,old_tile,new_tile):
 
-    def minimax(board, depth):
+    def minimax(board, depth, difficulty):
         pane = [board.right_stack_panel, board.left_stack_panel]
         isLeaf = board.check_win() != 2
         if depth == MAX_DEPTH or isLeaf:
-            return MinMax.evaluate(board,depth)
+            if difficulty == 0: return MinMax.evaluate_easy(board,depth)
+            if difficulty == 1: return MinMax.evaluate_medium(board,depth)
+            if difficulty == 2: return MinMax.evaluate_hard(board,depth)
         list = []
         for i in range(3): # stack pane evaluation of current player
-            list += MinMax.evaluate_possible_moves(pane[board.turn][i], board, board.turn, depth)
+            list += MinMax.evaluate_possible_moves(pane[board.turn][i], board, board.turn, depth, difficulty)
 
         for i in range(4):
             for j in range(4): # board evaluation
-                list += MinMax.evaluate_possible_moves(board.board[i][j], board, board.turn, depth)
+                list += MinMax.evaluate_possible_moves(board.board[i][j], board, board.turn, depth, difficulty)
 
         if len(list) == 0: # Leaf node
-            return MinMax.evaluate(board,depth)
+            if difficulty == 0: return MinMax.evaluate_easy(board,depth)
+            if difficulty == 1: return MinMax.evaluate_medium(board,depth)
+            if difficulty == 2: return MinMax.evaluate_hard(board,depth)
 
         if depth == 0:
             print(list)
@@ -31,9 +34,7 @@ class MinMax:
             board.move(next_move[0], next_move[1])
         return max(list) if board.turn else min(list)
 
-
-
-    def evaluate_possible_moves(tile, board, player, depth):
+    def evaluate_possible_moves(tile, board, player, depth, difficulty):
         list = []
         if len(tile.pieces_stack) != 0 and tile.pieces_stack[-1].color.value == player:
             for i in range(4):
@@ -46,16 +47,16 @@ class MinMax:
                             # print(i,"      ",j)
                             MinMax.available_moves.append((tile, board.board[i][j]))
                         board.turn = 1-player
-                        list.append(MinMax.minimax(board, depth + 1))
+                        list.append(MinMax.minimax(board, depth + 1, difficulty))
                         # board.turn = player
                         tile.push_piece(board.board[i][j].pop_piece())
                     MinMax.restore(backup, board)
         return list
     
-    def evaluate(board,depth):
+    def evaluate_hard(board, depth):
         winner = board.check_win()
-        if winner == 1: return -INFINITY+depth
-        elif winner == -1: return INFINITY-depth
+        if winner == 1: return -INFINITY + depth
+        elif winner == -1: return INFINITY - depth
         elif winner == 0: return 0
         n_human, n_ai, s_human, s_ai = 0, 0, 0, 0
         rows_ai, cols_ai, diag_ai, rows_human, cols_human, diag_human = [0, 0, 0, 0], [0, 0, 0, 0], [0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0]
@@ -96,13 +97,6 @@ class MinMax:
         return 10 * (n_ai - n_human) + 100 * (w_ai - w_human) + 5 * (c_ai - c_human) + (s_ai - s_human) + critical_val
 
 
-    def evaluate_tile(tile, i, j):
-        if len(tile.pieces_stack) == 0: return 0
-        # if len(tile.pieces_stack) == 0: return 3 if i == j or i == (3 - j) else 2
-        val = (3 if i == j or i == (3 - j) else 2) * (16 + tile.pieces_stack[-1].size)
-        return val if tile.pieces_stack[-1].color == Color.DARK else -val
-
-
     def evaluate_medium(board, depth):
         winner = board.check_win()
         if winner == 1: return -INFINITY + depth
@@ -135,6 +129,25 @@ class MinMax:
         c_human = 10 - rows_human.count(0) + cols_human.count(0) + diag_human.count(0)
 
         return 10 * (n_ai - n_human) + 100 * (w_ai - w_human) + 5 * (c_ai - c_human) + (s_ai - s_human)
+
+    def evaluate_easy(board, depth):
+        winner = board.check_win()
+        if winner == 1: return -INFINITY + depth
+        elif winner == -1: return INFINITY - depth
+        elif winner == 0: return 0
+        n_human, n_ai = 0, 0
+        for i in range(4):
+            for j in range(4):
+                if len(board.board[i][j].pieces_stack) !=0:
+                    if board.board[i][j].pieces_stack[-1].color == Color.LIGHT: n_human += 1
+                    else: n_ai += 1
+        return 10 * (n_ai - n_human)
+
+    def evaluate_tile(tile, i, j):
+        if len(tile.pieces_stack) == 0: return 0
+        # if len(tile.pieces_stack) == 0: return 3 if i == j or i == (3 - j) else 2
+        val = (3 if i == j or i == (3 - j) else 2) * (16 + tile.pieces_stack[-1].size)
+        return val if tile.pieces_stack[-1].color == Color.DARK else -val
 
 
     def backup(board):
