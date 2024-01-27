@@ -179,4 +179,78 @@ class MinMax:
         board.black_tuple_array_counter = list[7]
         board.turn = list[8]
         board.repetition_draw = list[9]
-        
+
+    def minimax_with_pruning(board, depth,alpha,beta,difficulty):
+        # MinMax.counter +=1
+        pane = [board.right_stack_panel, board.left_stack_panel]
+        isLeaf = board.check_win() != 2
+        if depth == MinMax.iterative_depth or isLeaf:
+            if difficulty == 0: return MinMax.evaluate_easy(board,depth)
+            if difficulty == 1: return MinMax.evaluate_medium(board,depth)
+            if difficulty == 2: return MinMax.evaluate_hard(board,depth)
+        list = []
+        for i in range(3): # stack pane evaluation of current player
+            current_list, to_be_pruned = MinMax.evaluate_possible_moves_pruning(pane[board.turn][i], board, board.turn, depth,alpha,beta,difficulty)
+            if to_be_pruned ==True and depth != 0:
+                return current_list               
+            elif  to_be_pruned ==False: 
+                list += current_list
+            
+
+        for i in range(4):
+            for j in range(4): # board evaluation
+                current_list, to_be_pruned = MinMax.evaluate_possible_moves_pruning(board.board[i][j], board, board.turn, depth,alpha,beta,difficulty)
+                if to_be_pruned ==True and depth != 0:
+                    return current_list               
+                elif  to_be_pruned ==False: 
+                    list += current_list
+                
+
+
+        if len(list) == 0: # Leaf node
+            if difficulty == 0: return MinMax.evaluate_easy(board,depth)
+            if difficulty == 1: return MinMax.evaluate_medium(board,depth)
+            if difficulty == 2: return MinMax.evaluate_hard(board,depth)
+
+        if depth == 0:
+            # print(list)
+            # print(list.index(max(list) if board.turn else min(list)))
+            MinMax.rootlist=list
+            max_index = max(range(len(MinMax.available_moves)), key=lambda i: MinMax.available_moves[i][2])
+            min_index = min(range(len(MinMax.available_moves)), key=lambda i: MinMax.available_moves[i][2])
+            # next_move = MinMax.available_moves[list.index(max(list) if board.turn else min(list))]
+            next_move = MinMax.available_moves[max_index] if board.turn else MinMax.available_moves[min_index]
+            # board.move(next_move[0], next_move[1])
+        return max(list) if board.turn else min(list)
+
+
+    def evaluate_possible_moves_pruning(tile, board, player, depth, alpha, beta,difficulty):
+        list = []
+        if len(tile.pieces_stack) != 0 and tile.pieces_stack[-1].color.value == player:
+            for i in range(4):
+                for j in range(4):
+                    board.to_board = 1
+                    if board.game_Rules(tile, board.board[i][j]):
+                        board.board[i][j].push_piece(tile.pop_piece())
+                        
+                        # val = MinMax.evaluate_k(board)
+                        board.turn = 1-player
+                        val  =  MinMax.minimax_with_pruning(board, depth + 1,alpha,beta,difficulty)
+                        if depth == 0:
+                            MinMax.available_moves.append((tile, board.board[i][j],val))
+                        # print("depth: ",depth,"player: ",player," ,val: ",val,",alpha: " ,alpha,",beta: ",beta)
+                        if player:
+                            alpha = val if (val >alpha) else alpha
+                        else:
+                            beta = val if (val <beta) else beta
+                        
+                        board.turn = player
+                        tile.push_piece(board.board[i][j].pop_piece())
+                        if alpha >= beta:
+                            return val, True
+                            # return list, True
+                        # print("list: ",list)
+                        # print("available_moves: ",MinMax.available_moves)
+                        list.append(val)
+
+        return list, False
