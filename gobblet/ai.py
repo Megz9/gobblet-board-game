@@ -3,10 +3,11 @@ import pygame
 from gobblet.constants import INFINITY, MAX_DEPTH, Color
 
 class MinMax:
-
+    Draw_Request=0
+    Tried_Draw_Once=0
     available_moves = []
 
-        def minimax(board, depth, difficulty):
+    def minimax(board, depth, difficulty):
         pane = [board.right_stack_panel, board.left_stack_panel]
         isLeaf = board.check_win() != 2
         if depth == MAX_DEPTH or isLeaf:
