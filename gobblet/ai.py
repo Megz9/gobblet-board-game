@@ -6,7 +6,7 @@ class MinMax:
 
     available_moves = []
 
-    def minimax(board, depth, difficulty):
+        def minimax(board, depth, difficulty):
         pane = [board.right_stack_panel, board.left_stack_panel]
         isLeaf = board.check_win() != 2
         if depth == MAX_DEPTH or isLeaf:
@@ -30,6 +30,11 @@ class MinMax:
             print(list)
             print(max(list) if board.turn else min(list))
             print(list.index(max(list) if board.turn else min(list)))
+            if board.turn and (max(list)<-INFINITY+10) and MinMax.Tried_Draw_Once==0 :
+                #condition to check double draaw request
+                MinMax.Draw_Request=1
+                return
+            MinMax.Tried_Draw_Once=0
             next_move = MinMax.available_moves[list.index(max(list) if board.turn else min(list))]
             board.move(next_move[0], next_move[1])
         return max(list) if board.turn else min(list)
