@@ -3,7 +3,6 @@ import sys
 from .constants import *
 
 class Button:
-
     selected_mode = 0
     selected_difficulty = 0
     selected_difficulty_two = 0

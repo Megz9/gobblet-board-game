@@ -7,7 +7,11 @@ from .constants import *
 
 
 class Board:
+    left_player = 0
+    right_player = 0
     def __init__(self, win):
+        left_player = 0
+        right_player = 0
         self.board = [[0] * COLS for _ in range(ROWS)]
         self.left_stack_panel = [Tile(
             LEFT_PANE_START, MARGIN + (SQUARE_SIZE/2) + (SQUARE_SIZE * i)) for i in range(3)]
@@ -57,6 +61,9 @@ class Board:
                 self.right_stack_panel[i].pieces_stack[-1], self.right_stack_panel[i])
         Button.draw_hover_button(win, RIGHT_PANE_START - MARGIN, MARGIN, BUTTON_HEIGHT, BUTTON_HEIGHT,
                              "||", BEIGE, HOVER_COLOR)
+        # Add Draw Button
+        Button.draw_button(win ,LEFT_PANE_START+5, HEIGHT-4,100,42,"Draw",BEIGE,BEIGE )
+        Button.draw_button(win ,RIGHT_PANE_START+5, HEIGHT-4,100,42,"Draw",BEIGE,BEIGE )
 
     def check_repetition(self,size,pos_x,pos_y,turn):
         white_repetition = 0
@@ -119,6 +126,7 @@ class Board:
         self.check_repetition(new_tile.pieces_stack[-1].size,new_tile.pos_x,new_tile.pos_y,not self.turn)
         pygame.mixer.music.load('asset/move.wav')
         pygame.mixer.music.play(1)
+        
 
 
     def draw_tile(self, tile):
@@ -343,6 +351,7 @@ class Board:
                 pygame.draw.rect(self.win, BEIGE if (row + col) % 2 == 0 else BROWN,
                                  (x, y, SQUARE_SIZE, SQUARE_SIZE))
                 self.draw_tile(self.board[row][col])
+        
 
     def draw_game(self):
         self.win.fill(BACKGROUND)
@@ -354,8 +363,13 @@ class Board:
         Button.draw_hover_button(self.win, RIGHT_PANE_START - MARGIN, MARGIN, BUTTON_HEIGHT, BUTTON_HEIGHT,
                              "||", BEIGE, HOVER_COLOR)
 
-
-
+         # Add Draw Button
+        Button.draw_button(self.win ,LEFT_PANE_START+5, HEIGHT-4,100,42,"Draw",BEIGE,BEIGE )
+        Button.draw_button(self.win ,RIGHT_PANE_START+5, HEIGHT-4,100,42,"Draw",BEIGE,BEIGE )
+        if self.left_player == 1 :
+            Button.draw_button(self.win ,LEFT_PANE_START+5, HEIGHT-4,100,42,"Draw",DISABLED_BUTTON,DISABLED_BUTTON )
+        if self.right_player == 1 :
+            Button.draw_button(self.win ,RIGHT_PANE_START+5, HEIGHT-4,100,42,"Draw",DISABLED_BUTTON,DISABLED_BUTTON )
     # def evaluate(self, color):
     #     player_wins = self.check_win() #white returns 1, Dark return -1,draw return 0
 
@@ -370,3 +384,4 @@ class Board:
     #     player_lines = self.count_potential_lines(color)
     #     opponent_lines = self.count_potential_lines((color+1)%2)
  
+
